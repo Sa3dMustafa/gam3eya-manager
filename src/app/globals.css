@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+:root {
+  /* سطح المستند - ورقة دافئة بدلاً من الأبيض الناصع */
+  --paper: #fbfaf7;
+  --paper-raised: #ffffff;
+  --ink: #14241f;
+  --ink-muted: #5b6b65;
+  --line: #e7e3da;
+
+  /* الزمرد - اللون الأساسي */
+  --emerald-50: #ecfdf5;
+  --emerald-100: #d1fae5;
+  --emerald-200: #a7f3d0;
+  --emerald-400: #34d399;
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+  --emerald-700: #047857;
+  --emerald-800: #065f46;
+  --emerald-900: #064e3b;
+
+  /* الأزرق - ثانوي */
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+
+  /* تحذير وخطر ونجاح */
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper-raised);
+  --card-foreground: var(--ink);
+  --border: var(--line);
+  --muted: #f3f1ea;
+  --muted-foreground: var(--ink-muted);
+  --primary: var(--emerald-600);
+  --primary-foreground: #ffffff;
+  --secondary: var(--blue-600);
+  --secondary-foreground: #ffffff;
+  --accent: var(--emerald-50);
+  --accent-foreground: var(--emerald-800);
+  --warning: var(--amber-500);
+  --danger: var(--red-600);
+  --success: var(--emerald-600);
+  --ring: var(--emerald-500);
+  --radius: 0.875rem;
+}
+
+.dark {
+  --paper: #0c1813;
+  --paper-raised: #102019;
+  --ink: #eef3f0;
+  --ink-muted: #97a39c;
+  --line: #1d2f27;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper-raised);
+  --card-foreground: var(--ink);
+  --border: var(--line);
+  --muted: #142621;
+  --muted-foreground: var(--ink-muted);
+  --primary: var(--emerald-500);
+  --primary-foreground: #06251d;
+  --secondary: var(--blue-500);
+  --secondary-foreground: #ffffff;
+  --accent: #102822;
+  --accent-foreground: var(--emerald-200);
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --success: var(--emerald-400);
+  --ring: var(--emerald-400);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --font-display: var(--font-plex-arabic), "IBM Plex Sans Arabic", sans-serif;
+  --font-body: var(--font-kufi-arabic), "Noto Kufi Arabic", sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  direction: rtl;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), "Noto Kufi Arabic", sans-serif;
+  font-feature-settings: "tnum" 1;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display), "IBM Plex Sans Arabic", sans-serif;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* شريط تمرير هادئ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* تركيز واضح لإمكانية الوصول */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

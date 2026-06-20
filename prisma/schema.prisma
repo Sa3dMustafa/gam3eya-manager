@@ -1,0 +1,191 @@
+// مدير الجمعيات - Prisma Schema
+// نظام إدارة الجمعيات المالية الدورية (ROSCA)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// الجمعية - Gam3eya (Rotating Savings Group)
+// ==========================================
+model Gam3eya {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  startDate       DateTime
+  endDate         DateTime
+  dueDay          Int // يوم الاستحقاق كل شهر (1-31)
+  membersCount    Int
+  roundsCount     Int
+  roundValue      Float // قيمة الدور (المبلغ الذي يدفعه كل عضو شهريًا)
+  totalValue      Float // القيمة الإجمالية للجمعية = roundValue * membersCount
+  status          GamStatus @default(ACTIVE)
+  archivedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  members  Member[]
+  rounds   Round[]
+  notes    Note[]
+  payments Payment[]
+
+  @@index([status])
+}
+
+enum GamStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+// ==========================================
+// العضو - Member
+// ==========================================
+model Member {
+  id            String   @id @default(cuid())
+  gam3eyaId     String
+  fullName      String
+  phone         String?
+  notes         String?
+  joinDate      DateTime @default(now())
+  receivingRound Int // ترتيب الاستلام (رقم الدور الذي يستلم فيه هذا العضو)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  gam3eya       Gam3eya   @relation(fields: [gam3eyaId], references: [id], onDelete: Cascade)
+  rounds        Round[]   @relation("RoundReceiver")
+  payments      Payment[]
+  memberNotes   Note[]
+
+  @@index([gam3eyaId])
+  @@unique([gam3eyaId, receivingRound])
+}
+
+// ==========================================
+// الدور - Round
+// ==========================================
+model Round {
+  id               String      @id @default(cuid())
+  gam3eyaId        String
+  roundNumber      Int
+  dueDate          DateTime
+  receiverId       String
+  collectionTarget Float
+  status           RoundStatus @default(UPCOMING)
+  startedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  gam3eya  Gam3eya   @relation(fields: [gam3eyaId], references: [id], onDelete: Cascade)
+  receiver Member    @relation("RoundReceiver", fields: [receiverId], references: [id])
+  payments Payment[]
+  notes    Note[]
+
+  @@index([gam3eyaId])
+  @@unique([gam3eyaId, roundNumber])
+}
+
+enum RoundStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+}
+
+// ==========================================
+// الدفعة - Payment
+// ==========================================
+model Payment {
+  id            String        @id @default(cuid())
+  gam3eyaId     String
+  roundId       String
+  memberId      String
+  amount        Float
+  method        PaymentMethod
+  paidAt        DateTime      @default(now())
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  gam3eya     Gam3eya            @relation(fields: [gam3eyaId], references: [id], onDelete: Cascade)
+  round       Round              @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  member      Member             @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  attachments PaymentAttachment[]
+  paymentNotes Note[]
+
+  @@index([roundId, memberId])
+  @@index([gam3eyaId])
+}
+
+enum PaymentMethod {
+  CASH
+  INSTAPAY
+  VODAFONE_CASH
+  BANK_TRANSFER
+}
+
+// ==========================================
+// مرفقات الدفعة - Payment Attachments
+// ==========================================
+// ملاحظة: نخزّن محتوى الملف كـ base64 داخل قاعدة البيانات نفسها (fileData)
+// بدلاً من حفظه على القرص، لأن بيئات التشغيل السحابية (مثل Vercel) لا توفر
+// نظام ملفات دائمًا — أي ملف يُكتب على القرص وقت الطلب يُفقد بعد انتهائه.
+model PaymentAttachment {
+  id        String   @id @default(cuid())
+  paymentId String
+  fileName  String
+  fileData  String // محتوى الملف بصيغة base64
+  fileType  String // image | pdf
+  mimeType  String // application/pdf, image/png, إلخ — لازم لعرض/تنزيل الملف بشكل صحيح
+  fileSize  Int
+  createdAt DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
+}
+
+// ==========================================
+// الملاحظات - Notes (polymorphic-ish via optional FKs)
+// ==========================================
+model Note {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  gam3eyaId String?
+  gam3eya   Gam3eya? @relation(fields: [gam3eyaId], references: [id], onDelete: Cascade)
+
+  memberId String?
+  member   Member? @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  roundId String?
+  round   Round?  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([gam3eyaId])
+  @@index([memberId])
+  @@index([roundId])
+  @@index([paymentId])
+}
+
+// ==========================================
+// سجل النشاط - Activity Log
+// ==========================================
+model Activity {
+  id        String   @id @default(cuid())
+  type      String // payment_added | member_added | round_started | round_completed | gam3eya_created | gam3eya_updated | member_updated | member_deleted | backup_created | backup_restored
+  message   String // النص الجاهز بالعربي للعرض
+  gam3eyaId String?
+  createdAt DateTime @default(now())
+
+  @@index([gam3eyaId])
+  @@index([createdAt])
+}
