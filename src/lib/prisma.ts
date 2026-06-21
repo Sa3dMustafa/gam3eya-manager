@@ -9,10 +9,10 @@ const globalForPrisma = globalThis as unknown as {
 // رابط قاعدة البيانات: نقبل تسميات Vercel Postgres المختلفة (POSTGRES_PRISMA_URL وهو
 // الرابط المُجمَّع/pooled الموصى به للاستخدام في الواجهة)، مع رجوع لـ DATABASE_URL
 // كخيار افتراضي (مناسب أيضًا للتطوير المحلي بقاعدة بيانات Postgres عادية)
-const connectionString =
-  process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL || "";
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL || "",
+});
 
-const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 
 export const prisma =
